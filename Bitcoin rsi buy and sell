@@ -1,0 +1,40 @@
+mport ccxt
+import time
+
+exchange = ccxt.binance({
+    'apiKey': 'YOUR_API_KEY',
+    'secret': 'YOUR_SECRET_KEY',
+    'enableRateLimit': True,
+})
+
+symbol = 'BTC/USDT'
+rsi_buy = 31
+rsi_sell = 70
+
+while True:
+    try:
+        ticker = exchange.fetch_ticker(symbol)
+        last_price = ticker['last']
+        
+        # Calculate RSI
+        timeframe = '1h'
+        history = exchange.fetch_ohlcv(symbol, timeframe)
+        closes = [ohlcv[4] for ohlcv in history]
+        rsi = talib.RSI(np.array(closes), timeperiod=14)[-1]
+        
+        if rsi < rsi_buy:
+            # Buy
+            amount = 100  # Amount to buy in USDT
+            order = exchange.create_market_buy_order(symbol, amount/last_price)
+            print('Buy order executed: ', order)
+            
+        elif rsi > rsi_sell:
+            # Sell
+            amount = 100  # Amount to sell in BTC
+            order = exchange.create_market_sell_order(symbol, amount)
+            print('Sell order executed: ', order)
+            
+    except Exception as e:
+        print('Error: ', e)
+    
+    time.sleep(60)  # Wait for 1 minute before checking again
